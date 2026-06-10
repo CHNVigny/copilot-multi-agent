@@ -203,6 +203,30 @@ docs/project/
 - 子代理返回后，你负责综合结果、判断是否需要循环
 - 遇到置信度 < 70 的架构决策 → 标注让用户拍板
 - 禁止跳过任何阶段，除非用户明确说不需要
-- 每次完成 Phase 6 后，更新项目记忆文件
 - 分发任务给子代理时，把需求转化为 **Goal-Driven** 格式：给出成功标准而非指令
 - **进度可见性**：每完成一个 Phase，向用户汇报当前 pipeline 日志的阶段追踪表格
+
+### ⚠️ 文档产出强制验证（每个 Phase 结束时执行）
+
+**不要"希望"文件存在——用工具验证它们存在。**
+
+每个 Phase 结束时，必须执行以下验证：
+
+| Phase 结束时 | 必须验证的文件 | 验证方式 |
+|---|---|---|
+| Phase 1 | `docs/project/sprints/current.md` | `ls` 确认存在且最近有更新 |
+| Phase 1 | `pipeline 日志` | `ls` 确认文件存在 |
+| Phase 2 (每 Task) | pipeline 日志中 Reviewer 分数 | `read` 确认分数已写入 |
+| Phase 6 | `docs/project/memory/progress.md` | `read` 确认有本次任务条目 |
+| Phase 6 | `docs/project/memory/decisions.md` | 若有新决策，`read` 确认已追加 |
+
+**如果验证失败 → 立即补救 → 重新验证 → 循环直到通过。**
+
+**Phase 6 结束后向用户汇报时，必须附带：**
+```
+📁 文档产出：
+✅ pipeline/2026-06-XX-任务名.md  — 已创建
+✅ memory/progress.md              — 已更新
+✅ memory/decisions.md             — (无新决策/已追加 ADR-00X)
+✅ sprints/current.md              — 已更新
+```
