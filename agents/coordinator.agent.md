@@ -206,27 +206,47 @@ docs/project/
 - 分发任务给子代理时，把需求转化为 **Goal-Driven** 格式：给出成功标准而非指令
 - **进度可见性**：每完成一个 Phase，向用户汇报当前 pipeline 日志的阶段追踪表格
 
-### ⚠️ 文档产出强制验证（每个 Phase 结束时执行）
+### ⚠️ 文档产出强制验证（每个 Phase 结束时必须执行 terminal 命令）
 
-**不要"希望"文件存在——用工具验证它们存在。**
+**不要"希望"文件存在——用 terminal 命令验证。这些命令必须执行，不能跳过。**
 
-每个 Phase 结束时，必须执行以下验证：
-
-| Phase 结束时 | 必须验证的文件 | 验证方式 |
-|---|---|---|
-| Phase 1 | `docs/project/sprints/current.md` | `ls` 确认存在且最近有更新 |
-| Phase 1 | `pipeline 日志` | `ls` 确认文件存在 |
-| Phase 2 (每 Task) | pipeline 日志中 Reviewer 分数 | `read` 确认分数已写入 |
-| Phase 6 | `docs/project/memory/progress.md` | `read` 确认有本次任务条目 |
-| Phase 6 | `docs/project/memory/decisions.md` | 若有新决策，`read` 确认已追加 |
-
-**如果验证失败 → 立即补救 → 重新验证 → 循环直到通过。**
-
-**Phase 6 结束后向用户汇报时，必须附带：**
+**Phase 1 结束时，逐条执行：**
+```bash
+# 1. 验证 pipeline 日志已创建
+ls -la docs/project/pipeline/
+# 2. 验证 sprints/current.md 存在且非空
+test -s docs/project/sprints/current.md && echo "OK" || echo "MISSING - 立即创建"
 ```
-📁 文档产出：
-✅ pipeline/2026-06-XX-任务名.md  — 已创建
-✅ memory/progress.md              — 已更新
-✅ memory/decisions.md             — (无新决策/已追加 ADR-00X)
-✅ sprints/current.md              — 已更新
+
+**Phase 2 每个 Task 审查后：**
+```bash
+# 验证 Reviewer 分数已写入 pipeline 日志
+grep -c "加权总分" docs/project/pipeline/*.md
+```
+
+**Phase 6 结束时，逐条执行：**
+```bash
+# 1. 验证 memory/progress.md 存在且包含本次任务
+grep -c "$(date +%Y-%m-%d)" docs/project/memory/progress.md 2>/dev/null && echo "OK" || (echo "## $(date +%Y-%m-%d)" >> docs/project/memory/progress.md && echo "CREATED")
+# 2. 验证 memory/decisions.md 存在
+test -f docs/project/memory/decisions.md && echo "OK" || echo "MISSING"
+# 3. 验证 sprints/current.md 已更新
+test -s docs/project/sprints/current.md && echo "OK" || echo "MISSING"
+# 4. 验证 pipeline 日志完整
+ls -la docs/project/pipeline/
+```
+
+**如果任何命令返回 MISSING → 立即用 edit 创建/更新该文件 → 重新执行验证命令 → 循环直到全部 OK。**
+
+**Phase 6 向用户汇报时，必须复制终端输出：**
+```
+📁 文档产出验证：
+$ ls docs/project/pipeline/
+  2026-06-XX-任务名.md ✅
+$ grep $(date +%Y-%m-%d) docs/project/memory/progress.md
+  ## 2026-06-XX ... ✅
+$ test -f docs/project/memory/decisions.md && echo OK
+  OK ✅
+$ test -s docs/project/sprints/current.md && echo OK
+  OK ✅
 ```
