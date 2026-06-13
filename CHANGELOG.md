@@ -1,6 +1,54 @@
 # Changelog
 
-## v5 (2026-06-11)
+## v6 (2026-06-13)
+
+### 核心理念升级
+基于 Anthropic Building Effective Agents + Teamday Complete Guide + Karpathy 4 原则 + 7 Design Patterns 的系统性改造。
+核心目标：**任务稳定性 & 代码可靠性**。
+
+### Added
+- **ContextManager Agent (v1)**：为每个子代理生成精准 Context Summary，解决"Agent 失忆"问题
+- **循环上限机制**：Implementer 最多 3 轮、其他 Agent 最多 2 轮，防止死循环
+- **升级机制 (Escalation)**：重试耗尽后整理"已做尝试+失败原因"向用户精确求助，附带 2-3 个建议方案
+- **Phase 2.5 架构后审**：实现完成后 Architect 做二次架构一致性审查
+- Pipeline 日志新增「重试计数」和「🆘 升级」状态
+
+### Changed
+- **Implementer v4 → v5**：引入 Self-Reflection 循环（编码→自验证→自审查→产出验证→修正→再循环，最多 2 轮）
+  - 强制 7 条 Self-Reflection 检查表（不可跳过任何一条）
+  - 产出终端输出强制验证：`ls -la` + `test -s` 确认文件真实存在且非空
+  - 自己把问题消灭在交付前，不给 Coordinator 留"声称完成但文件缺失"的机会
+- **Reviewer v4 → v5**：从"打分+打回去"升级为 Evaluator-Optimizer 模式
+  - 行级 before/after 修复指令，附带验证命令
+  - Implementer 收到后可以无脑执行
+- **Architect v3 → v4**：新增 Phase 2 实现审查模式
+  - Phase 1 审查计划 + Phase 2 审查实现，双重验证
+- **StressTester v3 → v4**：新增 terminal 权限
+  - 实际执行并发压测/资源耗尽/异常输入命令
+  - 理论分析 + 实际执行双重覆盖
+- **Coordinator v5 → v6**：重构为弹性流水线
+  - Context Summary 机制（每次调度子代理前注入状态摘要）
+  - 去掉独立的子代理产出验证步骤（信任 Implementer v5 的 Self-Reflection）
+  - 精简文档产出验证（Phase 1 + Phase 6 两个检查点）
+  - Agents 列表新增 ContextManager
+
+### Agent 权限汇总 (v6)
+
+| Agent | read | search | edit | terminal | agent |
+|---|---|---|---|---|---|
+| Coordinator | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Planner | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Architect | ✅ | ✅ | ❌ | ✅ | ❌ |
+| ContextManager | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Implementer | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Debugger | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Reviewer | ✅ | ✅ | ❌ | ✅ | ❌ |
+| StressTester | ✅ | ✅ | ❌ | ✅ | ❌ |
+| SecurityAuditor | ✅ | ✅ | ❌ | ✅ | ❌ |
+| TestWriter | ✅ | ✅ | ✅ | ✅ | ❌ |
+| QATester | ✅ | ✅ | ❌ | ✅ | ❌ |
+
+总计 11 Agents | 8 个拥有 terminal | 2 个拥有 edit | 1 个拥有 agent
 ### Added
 - 文档分门别类：`docs/project/memory/`、`sprints/`、`pipeline/` 三层目录
 - 流水线日志：每次任务生成 `YYYY-MM-DD-任务简称.md`，含子代理调用日志表和阶段追踪表
