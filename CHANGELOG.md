@@ -1,5 +1,45 @@
 # Changelog
 
+## v7 (2026-06-13)
+
+### 核心理念
+解决 Coordinator "只能输出命令让用户手动执行" 的痛点。
+Coordinator 现在自主执行无风险命令，有副作用命令走审批门。
+
+### Added
+- **CommandRunner Agent (v1)**：极简命令执行器，专门执行 Coordinator 分派的验证/检查/文件操作命令
+- **审批门 (Approval Gate)**：有副作用命令（git push, pip install, rm 等）执行前展示审批提示，用户确认后执行
+- Coordinator 新增「自主执行 vs 审批请求 vs 委托子代理」三级分类
+
+### Changed
+- **Coordinator v6 → v7**：重写为自主执行模式
+  - 无风险命令（ls/test/grep/mkdir/echo）→ 直接 terminal 执行，不输出让用户手动跑
+  - 有副作用命令 → 先展示审批提示（命令+原因+影响范围），用户批准后执行
+  - 复杂命令 → 委托给有 terminal 的子代理跑
+  - 文档产出验证 → Coordinator 自己 terminal 跑并展示结果
+  - Agents 列表新增 CommandRunner
+
+### Agent 权限汇总 (v7)
+
+| Agent | read | search | edit | terminal | agent |
+|---|---|---|---|---|---|
+| Coordinator | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Planner | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Architect | ✅ | ✅ | ❌ | ✅ | ❌ |
+| ContextManager | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Implementer | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Debugger | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Reviewer | ✅ | ✅ | ❌ | ✅ | ❌ |
+| StressTester | ✅ | ✅ | ❌ | ✅ | ❌ |
+| SecurityAuditor | ✅ | ✅ | ❌ | ✅ | ❌ |
+| TestWriter | ✅ | ✅ | ✅ | ✅ | ❌ |
+| QATester | ✅ | ✅ | ❌ | ✅ | ❌ |
+| CommandRunner | ✅ | ❌ | ❌ | ✅ | ❌ |
+
+总计 12 Agents | 8 个拥有 terminal | 3 个拥有 edit | 1 个拥有 agent
+
+---
+
 ## v6 (2026-06-13)
 
 ### 核心理念升级

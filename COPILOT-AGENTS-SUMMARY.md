@@ -1,7 +1,7 @@
-# Copilot Multi-Agent 编程配置 — 完整总结文档 v6
+# Copilot Multi-Agent 编程配置 — 完整总结文档 v7
 
 > 基于 Anthropic Building Effective Agents + Teamday Complete Guide + Karpathy 4 原则 + 7 Design Patterns
-> 详细记录了 11 个 Copilot Agent 的完整设计、触发条件、交互流程和安装方式。
+> 详细记录了 12 个 Copilot Agent 的完整设计、触发条件、交互流程和安装方式。
 
 ---
 
@@ -19,9 +19,11 @@
 6. **压力测试可执行**：StressTester v4 有 terminal 权限，实际运行压测命令
 7. **模型分层**：规划/审查类用 Haiku/Flash 省钱，实现/审计类用 Sonnet/GPT-5 保质量
 
-### v6 稳定性的三层防御
+### v7 稳定性保障（三层防御 + 自主执行）
 
 ```
+Layer 0: Coordinator 自主执行 → 无风险命令直接 terminal 跑，不看用户
+Layer 0.5: 审批门 → 有副作用命令先展示审批提示，用户确认后执行
 Layer 1: Implementer Self-Reflection → 自我发现 60-80% 的问题
 Layer 2: Reviewer Evaluator-Optimizer → 精确修复指令，不模糊打回
 Layer 3: Coordinator 升级机制 → 重试耗尽后精确求助，不瞎猜
@@ -29,11 +31,11 @@ Layer 3: Coordinator 升级机制 → 重试耗尽后精确求助，不瞎猜
 
 ---
 
-## 二、11 个 Agent 完整清单
+## 二、12 个 Agent 完整清单
 
 | # | Agent Name | 职责 | 触发条件 | 工具 | 模型 |
 |---|---|---|---|---|---|
-| 1 | **DevCoordinator** | 总指挥 v6，弹性流水线 + Context Summary + 升级机制 | 所有新任务 | agent, read, search, edit, terminal | Sonnet 4.6 / GPT-5 |
+| 1 | **DevCoordinator** | 总指挥 v7，自主执行 + 审批门 + 弹性流水线 | 所有新任务 | agent, read, search, edit, terminal | Sonnet 4.6 / GPT-5 |
 | 2 | **Planner** | 需求拆解为 Goal-Driven 任务列表 | Phase 1 | read, search | Haiku 4.5 / Flash |
 | 3 | **Architect** | 双重架构审查（Phase 1 计划 + Phase 2 实现） | Phase 1 + Phase 2.5 | read, search, terminal | Haiku 4.5 / Flash |
 | 4 | **ContextManager** | 为子代理生成精准 Context Summary | 每次调度前 | read, search, edit | Haiku 4.5 / Flash |
@@ -44,6 +46,7 @@ Layer 3: Coordinator 升级机制 → 重试耗尽后精确求助，不瞎猜
 | 9 | **SecurityAuditor** | OWASP Top 10 + CWE Top 25 全覆盖 | 安全相关代码 | read, search, terminal | Sonnet 4.6 |
 | 10 | **TestWriter** | 编写单元/集成测试 | Phase 5 | read, search, edit, terminal | Haiku 4.5 / Flash |
 | 11 | **QATester** | 手动测试/Bug Report 生成 | Phase 5 | read, search, terminal | Haiku 4.5 / Flash |
+| 12 | **CommandRunner** | 极简命令执行器，执行 Coordinator 分派的验证命令 | Phase 6 文档验证 | read, terminal | Haiku 4.5 / Flash |
 
 ---
 
